@@ -154,6 +154,16 @@ export default function ResidentHomePage() {
           </Button>
         </div>
       </section>
+
+      <section
+        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 shadow-sm"
+        aria-disabled="true"
+      >
+        <h2 className="text-lg font-semibold text-slate-400">Smart Cart</h2>
+        <p className="mt-2 text-sm text-slate-400">
+          Coming soon: personalized from previous orders
+        </p>
+      </section>
     </div>
   )
 }
