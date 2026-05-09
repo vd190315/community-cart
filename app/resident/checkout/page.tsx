@@ -10,34 +10,27 @@ import { useResidentCart } from "../ResidentCartProvider";
 export default function ResidentCheckoutPage() {
   const router = useRouter();
   const [isPaying, setIsPaying] = useState(false);
-  const { quantities, residentProfile, markSessionOrderPlaced } = useResidentCart();
+  const { cartLines, residentProfile, markSessionOrderPlaced } = useResidentCart();
 
-  const cartLines = useMemo(
-    () => products.filter((product) => (quantities[product.id] ?? 0) > 0),
-    [quantities]
-  );
+  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), []);
 
   const totalUnits = useMemo(
-    () => Object.values(quantities).reduce((sum, qty) => sum + qty, 0),
-    [quantities]
+    () => cartLines.reduce((sum, line) => sum + line.quantity, 0),
+    [cartLines]
   );
 
   const subtotal = useMemo(
-    () =>
-      cartLines.reduce(
-        (sum, product) => sum + (quantities[product.id] ?? 0) * product.price,
-        0
-      ),
-    [cartLines, quantities]
+    () => cartLines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0),
+    [cartLines]
   );
 
   const estimatedSavings = useMemo(
     () =>
-      cartLines.reduce(
-        (sum, product) => sum + (quantities[product.id] ?? 0) * (product.savingsPerUnit ?? 0),
-        0
-      ),
-    [cartLines, quantities]
+      cartLines.reduce((sum, line) => {
+        const product = productById.get(line.productId);
+        return sum + line.quantity * (product?.savingsPerUnit ?? 0);
+      }, 0),
+    [cartLines, productById]
   );
 
   const finalPayable = Math.max(0, subtotal - estimatedSavings);
@@ -89,20 +82,24 @@ export default function ResidentCheckoutPage() {
         <div className="surface-card space-y-3">
           <p className="text-sm font-semibold text-slate-900">Your items ({totalUnits} units)</p>
           <ul className="space-y-3">
-            {cartLines.map((product) => {
-              const qty = quantities[product.id] ?? 0;
-              const lineGross = qty * product.price;
-              const lineSave = qty * (product.savingsPerUnit ?? 0);
+            {cartLines.map((line) => {
+              const product = productById.get(line.productId);
+              const name = product?.name ?? line.productId;
+              const brandPack =
+                product != null ? `${product.brand} · ${product.packSize}` : line.productId;
+              const qty = line.quantity;
+              const lineGross = qty * line.unitPrice;
+              const lineSave = qty * (product?.savingsPerUnit ?? 0);
               return (
                 <li
-                  key={product.id}
+                  key={line.lineId}
                   className="flex gap-3 border-b border-emerald-100 pb-3 last:border-0 last:pb-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-900">{product.name}</p>
+                    <p className="text-sm font-medium text-slate-900">{name}</p>
                     <p className="text-xs text-slate-500">
-                      {product.brand} · {product.packSize} · ₹
-                      {product.price.toLocaleString("en-IN")} × {qty}
+                      {line.vendorName} · {brandPack} · ₹{line.unitPrice.toLocaleString("en-IN")} ×{" "}
+                      {qty}
                     </p>
                     {lineSave > 0 ? (
                       <p className="mt-0.5 text-xs text-brand-700">

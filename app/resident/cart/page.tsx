@@ -8,29 +8,22 @@ import { demoSociety, weeklyCycle } from "@/lib/demoData";
 import { useResidentCart } from "../ResidentCartProvider";
 
 export default function ResidentCartPage() {
-  const { residentProfile, quantities, updateQuantity } = useResidentCart();
+  const { residentProfile, cartLines, updateLineQuantity } = useResidentCart();
 
-  const cartProducts = useMemo(
-    () => products.filter((product) => (quantities[product.id] ?? 0) > 0),
-    [quantities]
-  );
+  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), []);
 
   const subtotal = useMemo(
-    () =>
-      cartProducts.reduce(
-        (sum, product) => sum + (quantities[product.id] ?? 0) * product.price,
-        0
-      ),
-    [cartProducts, quantities]
+    () => cartLines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0),
+    [cartLines]
   );
 
   const estimatedSavings = useMemo(
     () =>
-      cartProducts.reduce(
-        (sum, product) => sum + (quantities[product.id] ?? 0) * (product.savingsPerUnit ?? 0),
-        0
-      ),
-    [cartProducts, quantities]
+      cartLines.reduce((sum, line) => {
+        const product = productById.get(line.productId);
+        return sum + line.quantity * (product?.savingsPerUnit ?? 0);
+      }, 0),
+    [cartLines, productById]
   );
 
   const estimatedPayable = Math.max(0, subtotal - estimatedSavings);
@@ -55,7 +48,7 @@ export default function ResidentCartPage() {
         </p>
       </div>
 
-      {cartProducts.length === 0 ? (
+      {cartLines.length === 0 ? (
         <div className="surface-card space-y-3 text-center">
           <p className="text-base font-semibold text-slate-900">Your cart is empty</p>
           <p className="text-sm text-slate-600">
@@ -77,17 +70,22 @@ export default function ResidentCartPage() {
           </p>
 
           <div className="space-y-3">
-            {cartProducts.map((product) => {
-              const qty = quantities[product.id] ?? 0;
-              const lineGross = qty * product.price;
-              const lineSave = qty * (product.savingsPerUnit ?? 0);
+            {cartLines.map((line) => {
+              const product = productById.get(line.productId);
+              const name = product?.name ?? line.productId;
+              const brandPack =
+                product != null ? `${product.brand} · ${product.packSize}` : line.productId;
+              const qty = line.quantity;
+              const lineGross = qty * line.unitPrice;
+              const lineSave = qty * (product?.savingsPerUnit ?? 0);
               return (
-                <article key={product.id} className="surface-card space-y-3">
+                <article key={line.lineId} className="surface-card space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="text-base font-semibold text-slate-900">{product.name}</h2>
-                      <p className="text-xs text-slate-500">
-                        {product.brand} · {product.packSize}
+                      <h2 className="text-base font-semibold text-slate-900">{name}</h2>
+                      <p className="text-xs text-slate-500">{brandPack}</p>
+                      <p className="mt-1 text-xs font-medium text-slate-700">
+                        Vendor: {line.vendorName}
                       </p>
                       {lineSave > 0 ? (
                         <p className="mt-1 text-xs font-medium text-brand-700">
@@ -101,15 +99,15 @@ export default function ResidentCartPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-slate-600">
-                      ₹{product.price.toLocaleString("en-IN")} × {qty}
+                      ₹{line.unitPrice.toLocaleString("en-IN")} × {qty}
                     </p>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(product.id, -1)}
+                        onClick={() => updateLineQuantity(line.lineId, -1)}
                         disabled={qty === 0}
                         className="h-8 w-8 rounded-lg border border-emerald-200 text-lg text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                        aria-label={`Decrease ${product.name}`}
+                        aria-label={`Decrease ${name} from ${line.vendorName}`}
                       >
                         −
                       </button>
@@ -118,9 +116,9 @@ export default function ResidentCartPage() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(product.id, 1)}
+                        onClick={() => updateLineQuantity(line.lineId, 1)}
                         className="h-8 w-8 rounded-lg border border-emerald-200 text-lg text-slate-700"
-                        aria-label={`Increase ${product.name}`}
+                        aria-label={`Increase ${name} from ${line.vendorName}`}
                       >
                         +
                       </button>

@@ -9,14 +9,40 @@ import {
   useState,
   type ReactNode
 } from "react";
+import { residentCartLineId } from "@/lib/residentCatalog";
 import { residentProfile as demoResidentProfile } from "@/lib/demoData";
+import {
+  RESIDENT_DEMO_ORDER_PLACED_SESSION_KEY,
+  clearAdminVendorHandoffFromSession
+} from "@/lib/demoSessionGates";
+import { clearVendorOperationalSessionStorage } from "@/lib/vendorPackingSession";
 
-/** sessionStorage key: set after demo UPI checkout; cleared by closing tab or DevTools. */
-export const RESIDENT_DEMO_ORDER_PLACED_SESSION_KEY = "cc-demo-resident-order-placed";
+export { RESIDENT_DEMO_ORDER_PLACED_SESSION_KEY };
+
+export type ResidentCartLine = {
+  lineId: string;
+  productId: string;
+  vendorId: string;
+  vendorName: string;
+  unitPrice: number;
+  quantity: number;
+};
 
 type CartContextValue = {
+  /** One row per product + vendor; separate vendors stay separate lines. */
+  cartLines: ResidentCartLine[];
+  /** Total units per product (all vendors); useful for catalog card totals. */
   quantities: Record<string, number>;
-  updateQuantity: (productId: string, change: number) => void;
+  addOrIncrementLine: (args: {
+    productId: string;
+    vendorId: string;
+    vendorName: string;
+    unitPrice: number;
+    delta?: number;
+  }) => void;
+  updateLineQuantity: (lineId: string, change: number) => void;
+  /** Removes one unit from the last matching line (catalog “−” when multiple vendors exist). */
+  decrementLastLineForProduct: (productId: string) => void;
   clearCart: () => void;
   residentProfile: {
     name: string;
@@ -28,12 +54,14 @@ type CartContextValue = {
   /** True when this browser tab has completed demo checkout this session. */
   hasSessionOrder: boolean;
   markSessionOrderPlaced: () => void;
+  /** Call after onboarding / new household setup so order-status stays empty until the next checkout. */
+  resetSessionOrderForNewResident: () => void;
 };
 
 const ResidentCartContext = createContext<CartContextValue | null>(null);
 
 export function ResidentCartProvider({ children }: { children: ReactNode }) {
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [cartLines, setCartLines] = useState<ResidentCartLine[]>([]);
   const [residentProfile, setResidentProfile] = useState<{ name: string; flat: string }>({
     name: demoResidentProfile.name,
     flat: demoResidentProfile.flat
@@ -59,43 +87,129 @@ export function ResidentCartProvider({ children }: { children: ReactNode }) {
     setHasSessionOrder(true);
   }, []);
 
-  const updateQuantity = useCallback((productId: string, change: number) => {
-    setQuantities((prev) => {
-      const currentQty = prev[productId] ?? 0;
-      const nextQty = Math.max(0, currentQty + change);
+  const resetSessionOrderForNewResident = useCallback(() => {
+    try {
+      sessionStorage.removeItem(RESIDENT_DEMO_ORDER_PLACED_SESSION_KEY);
+    } catch {
+      /* ignore */
+    }
+    clearAdminVendorHandoffFromSession();
+    clearVendorOperationalSessionStorage();
+    setHasSessionOrder(false);
+    setCartLines([]);
+  }, []);
 
-      if (nextQty === 0) {
-        const { [productId]: _removed, ...rest } = prev;
-        return rest;
+  const quantities = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const line of cartLines) {
+      acc[line.productId] = (acc[line.productId] ?? 0) + line.quantity;
+    }
+    return acc;
+  }, [cartLines]);
+
+  const addOrIncrementLine = useCallback(
+    (args: {
+      productId: string;
+      vendorId: string;
+      vendorName: string;
+      unitPrice: number;
+      delta?: number;
+    }) => {
+      const delta = args.delta ?? 1;
+      if (delta === 0) return;
+
+      setCartLines((prev) => {
+        const lineId = residentCartLineId(args.productId, args.vendorId);
+        const idx = prev.findIndex((l) => l.lineId === lineId);
+        if (idx === -1) {
+          if (delta < 0) return prev;
+          return [
+            ...prev,
+            {
+              lineId,
+              productId: args.productId,
+              vendorId: args.vendorId,
+              vendorName: args.vendorName,
+              unitPrice: args.unitPrice,
+              quantity: delta
+            }
+          ];
+        }
+        const nextQty = prev[idx].quantity + delta;
+        if (nextQty <= 0) {
+          return prev.filter((_, i) => i !== idx);
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], quantity: nextQty };
+        return next;
+      });
+    },
+    []
+  );
+
+  const updateLineQuantity = useCallback((lineId: string, change: number) => {
+    if (change === 0) return;
+    setCartLines((prev) => {
+      const idx = prev.findIndex((l) => l.lineId === lineId);
+      if (idx === -1) return prev;
+      const nextQty = prev[idx].quantity + change;
+      if (nextQty <= 0) {
+        return prev.filter((_, i) => i !== idx);
       }
+      const next = [...prev];
+      next[idx] = { ...next[idx], quantity: nextQty };
+      return next;
+    });
+  }, []);
 
-      return { ...prev, [productId]: nextQty };
+  const decrementLastLineForProduct = useCallback((productId: string) => {
+    setCartLines((prev) => {
+      for (let i = prev.length - 1; i >= 0; i--) {
+        const line = prev[i];
+        if (line.productId === productId && line.quantity > 0) {
+          if (line.quantity <= 1) {
+            return prev.filter((_, j) => j !== i);
+          }
+          const next = [...prev];
+          next[i] = { ...line, quantity: line.quantity - 1 };
+          return next;
+        }
+      }
+      return prev;
     });
   }, []);
 
   const clearCart = useCallback(() => {
-    setQuantities({});
+    setCartLines([]);
   }, []);
 
   const value = useMemo(
     () => ({
+      cartLines,
       quantities,
-      updateQuantity,
+      addOrIncrementLine,
+      updateLineQuantity,
+      decrementLastLineForProduct,
       clearCart,
       residentProfile,
       setResidentProfile,
       sessionOrderHydrated,
       hasSessionOrder,
-      markSessionOrderPlaced
+      markSessionOrderPlaced,
+      resetSessionOrderForNewResident
     }),
     [
+      cartLines,
       quantities,
-      residentProfile,
-      updateQuantity,
+      addOrIncrementLine,
+      updateLineQuantity,
+      decrementLastLineForProduct,
       clearCart,
+      residentProfile,
       sessionOrderHydrated,
       hasSessionOrder,
-      markSessionOrderPlaced
+      markSessionOrderPlaced,
+      resetSessionOrderForNewResident
     ]
   );
 

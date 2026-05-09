@@ -17,6 +17,47 @@ export type MealBuilderData = {
   pantryItems: MealBuilderPantryItem[]
 }
 
+export type DemoNeighborProfile = {
+  id: string
+  name: string
+  flat: string
+  optedInToSharing: boolean
+  cartIngredients: string[]
+}
+
+export const demoNeighborProfiles: DemoNeighborProfile[] = [
+  {
+    id: 'neighbor-asha-b504',
+    name: 'Asha',
+    flat: 'B-504',
+    optedInToSharing: true,
+    cartIngredients: ['Tomato', 'Onion', 'Curd', 'Coriander Leaves'],
+  },
+  {
+    id: 'neighbor-rahul-a209',
+    name: 'Rahul',
+    flat: 'A-209',
+    optedInToSharing: true,
+    cartIngredients: ['Lemon', 'Mustard Seeds', 'Green Chilli'],
+  },
+  {
+    id: 'neighbor-neha-c602',
+    name: 'Neha',
+    flat: 'C-602',
+    optedInToSharing: false,
+    cartIngredients: ['Tomato', 'Curd'],
+  },
+]
+
+export function getNeighborsWithIngredient(ingredient: string): DemoNeighborProfile[] {
+  const normalizedIngredient = ingredient.toLowerCase()
+  return demoNeighborProfiles.filter(
+    (neighbor) =>
+      neighbor.optedInToSharing &&
+      neighbor.cartIngredients.some((item) => item.toLowerCase() === normalizedIngredient)
+  )
+}
+
 export async function getMealBuilderData(): Promise<MealBuilderData> {
   return {
     orderId: 'demo-order-001',

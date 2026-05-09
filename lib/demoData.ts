@@ -189,19 +189,145 @@ export const demoResidents = vendorPackingHouseholds.map((h) => ({
   name: h.resident
 }));
 
+/** Resident-facing stages on order status (shared timeline labels). */
+export const residentOrderStages = [
+  "Paid",
+  "Packed",
+  "Delivered to society gate",
+  "Ready for pickup"
+] as const;
+
+export type ResidentOrderStage = (typeof residentOrderStages)[number];
+
+/** Per-supplier leg when one paid order is fulfilled by multiple vendors (same order / cycle id). */
+export type DemoResidentVendorFulfillmentLeg = {
+  vendorName: string;
+  currentStage: ResidentOrderStage;
+};
+
+/** Admin batch stages (coordinator tracking). */
+export const adminBatchStages = [
+  "Sent to vendor",
+  "Packing",
+  "Dispatched",
+  "Delivered to society gate"
+] as const;
+
+export type DemoAdminVendorFulfillmentLeg = {
+  vendorName: string;
+  statusLabel: string;
+  nextStepLabel: string;
+};
+
 /**
  * Aligned demo progression: resident view vs admin consolidated handoff (same story, role-specific labels).
  * Indices line up: Paid / Sent to vendor → Packed / Packing → gate delivery → pickup-ready.
+ *
+ * Split fulfillment: when `vendorFulfillmentLegs` has 2+ entries, resident + admin tracking UIs show
+ * per-vendor sections for the same order id. Use `[]` for a single consolidated supplier (default).
  */
 export const demoOrderProgress = {
   resident: {
-    stages: ["Paid", "Packed", "Delivered to society gate", "Ready for pickup"] as const,
-    currentStage: "Packed" as const
+    stages: residentOrderStages,
+    currentStage: "Packed" as const satisfies ResidentOrderStage,
+    /**
+     * Two+ legs → resident order-status shows per-supplier cards. Replace with `[]` for a single
+     * consolidated timeline only.
+     */
+    vendorFulfillmentLegs: [
+      { vendorName: "FreshCart Hub", currentStage: "Packed" },
+      { vendorName: "Society Supplies Co.", currentStage: "Paid" }
+    ] as const satisfies readonly DemoResidentVendorFulfillmentLeg[]
   },
   admin: {
-    stages: ["Sent to vendor", "Packing", "Dispatched", "Delivered to society gate"] as const,
+    stages: adminBatchStages,
     currentStageIndex: 1 as const,
     statusLabel: "Packing" as const,
-    nextStepLabel: "Vendor finishing flat-wise bags" as const
+    nextStepLabel: "Vendor finishing flat-wise bags" as const,
+    vendorFulfillmentLegs: [
+      {
+        vendorName: "FreshCart Hub",
+        statusLabel: "Packing",
+        nextStepLabel: "Vendor finishing flat-wise bags"
+      },
+      {
+        vendorName: "Society Supplies Co.",
+        statusLabel: "Sent to vendor",
+        nextStepLabel: "Batch queued for this partner"
+      }
+    ] as const satisfies readonly DemoAdminVendorFulfillmentLeg[]
   }
 } as const;
+
+/** Net society rate per unit after bulk discount (matches payable math in resident demo). */
+function societyNetRatePerDemoLine(lineName: string): number {
+  const p = productForDemoLine(lineName);
+  return Math.max(0, p.price - (p.savingsPerUnit ?? 0));
+}
+
+/** Split integer units across N vendors; first `remainder` vendors get one extra unit. */
+function splitUnitsAcrossVendors(
+  totalUnits: number,
+  vendorNames: readonly string[]
+): { vendorName: string; units: number }[] {
+  if (vendorNames.length === 0) {
+    return [];
+  }
+  const n = vendorNames.length;
+  const base = Math.floor(totalUnits / n);
+  const remainder = totalUnits % n;
+  return vendorNames
+    .map((vendorName, i) => ({
+      vendorName,
+      units: base + (i < remainder ? 1 : 0)
+    }))
+    .filter((x) => x.units > 0);
+}
+
+export type ConsolidationVendorRoutingRow = {
+  vendorName: string;
+  productName: string;
+  units: number;
+  societyRatePerUnit: number;
+};
+
+export type ConsolidationVendorRouting = {
+  isSplit: boolean;
+  /** When `isSplit` is false, use this name in the single-vendor summary line. */
+  singleVendorName: string;
+  /** Populated when `isSplit`; each row is one vendor × product slice of the paid batch. */
+  rows: ConsolidationVendorRoutingRow[];
+};
+
+/**
+ * Read-only routing for the admin consolidation screen: same paid SKU totals as
+ * `consolidatedItemsPaidOrders`, allocated across `demoOrderProgress.admin.vendorFulfillmentLegs`.
+ * No network I/O — pilot demo only.
+ */
+export function getConsolidationVendorRouting(): ConsolidationVendorRouting {
+  const vendorNames = demoOrderProgress.admin.vendorFulfillmentLegs.map((l) => l.vendorName);
+
+  if (vendorNames.length <= 1) {
+    return {
+      isSplit: false,
+      singleVendorName: vendorNames[0] ?? "FreshCart Hub",
+      rows: []
+    };
+  }
+
+  const rows: ConsolidationVendorRoutingRow[] = [];
+  for (const item of consolidatedItemsPaidOrders) {
+    const parts = splitUnitsAcrossVendors(item.units, vendorNames);
+    const rate = societyNetRatePerDemoLine(item.name);
+    for (const p of parts) {
+      rows.push({
+        vendorName: p.vendorName,
+        productName: item.name,
+        units: p.units,
+        societyRatePerUnit: rate
+      });
+    }
+  }
+
+  return { isSplit: true, singleVendorName: vendorNames[0] ?? "", rows };
+}

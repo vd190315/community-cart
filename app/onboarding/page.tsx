@@ -18,7 +18,7 @@ const DIETARY_OPTIONS = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { residentProfile, setResidentProfile } = useResidentCart();
+  const { residentProfile, setResidentProfile, resetSessionOrderForNewResident } = useResidentCart();
   const [flat, setFlat] = useState(residentProfile.flat || demoResidentProfile.flat);
   const [familySize, setFamilySize] = useState("4");
   const [dietary, setDietary] = useState("");
@@ -40,6 +40,7 @@ export default function OnboardingPage() {
 
     if (flatTrim.length === 0 || !familyOk || !dietaryOk) return;
 
+    resetSessionOrderForNewResident();
     setResidentProfile({
       name: name.trim() || demoResidentProfile.name,
       flat: flatTrim

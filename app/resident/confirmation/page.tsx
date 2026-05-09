@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { demoSociety, sampleOrderId, weeklyCycle } from "@/lib/demoData";
 import { products } from "@/lib/residentCatalog";
-import { useResidentCart } from "../ResidentCartProvider";
+import { useResidentCart, type ResidentCartLine } from "../ResidentCartProvider";
 
-function amountPaidFromQuantities(quantities: Record<string, number>): number {
-  return products.reduce((sum, product) => {
-    const qty = quantities[product.id] ?? 0;
-    const savings = product.savingsPerUnit ?? 0;
-    return sum + qty * Math.max(0, product.price - savings);
+function amountPaidFromCartLines(lines: ResidentCartLine[]): number {
+  const productById = new Map(products.map((p) => [p.id, p]));
+  return lines.reduce((sum, line) => {
+    const product = productById.get(line.productId);
+    const savings = product?.savingsPerUnit ?? 0;
+    return sum + line.quantity * Math.max(0, line.unitPrice - savings);
   }, 0);
 }
 
 export default function ResidentConfirmationPage() {
-  const { quantities, residentProfile, clearCart } = useResidentCart();
-  const [amountPaid] = useState(() => amountPaidFromQuantities(quantities));
+  const { cartLines, residentProfile, clearCart } = useResidentCart();
+  const [amountPaid] = useState(() => amountPaidFromCartLines(cartLines));
 
   useEffect(() => {
     clearCart();

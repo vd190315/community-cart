@@ -155,14 +155,16 @@ export default function ResidentHomePage() {
         </div>
       </section>
 
-      <section
-        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 shadow-sm"
-        aria-disabled="true"
-      >
-        <h2 className="text-lg font-semibold text-slate-400">Smart Cart</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Coming soon: personalized from previous orders
+      <section className="rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Smart Cart</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Prefilled from your usual weekly staples.
         </p>
+        <div className="mt-4">
+          <Button href="/resident/smart-cart" variant="outline" className="w-full">
+            Open Smart Cart
+          </Button>
+        </div>
       </section>
     </div>
   )
