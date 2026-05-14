@@ -133,3 +133,29 @@ body {
     animation: none;
   }
 }
+
+/* Resident home: slim cashback ticker (GPU-friendly translate3d; pauses when reduced motion) */
+@keyframes resident-cashback-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.resident-cashback-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: resident-cashback-marquee 11s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resident-cashback-marquee-track {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}

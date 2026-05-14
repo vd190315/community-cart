@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MobileAppShell } from "@/components/MobileAppShell";
 import { PublicLanding } from "@/components/landing/PublicLanding";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <PublicLanding />;
+  return (
+    <MobileAppShell>
+      <PublicLanding />
+    </MobileAppShell>
+  );
 }

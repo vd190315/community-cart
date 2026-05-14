@@ -134,14 +134,14 @@ export default function ResidentCheckoutPage() {
           </div>
           <div className="border-t border-emerald-100 pt-2" />
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-900">You pay (demo UPI)</span>
+            <span className="font-semibold text-slate-900">You pay with UPI</span>
             <span className="text-lg font-bold text-slate-900">
               ₹{finalPayable.toLocaleString("en-IN")}
             </span>
           </div>
         </div>
         <p className="text-xs text-slate-500">
-          Demo only: tapping pay simulates success—no real charge.
+          Payment is simulated here—no charge is made.
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export default function ResidentCheckoutPage() {
             disabled={totalUnits === 0 || isPaying}
             className="w-full rounded-xl bg-brand-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            {isPaying ? "Processing..." : `Pay ₹${finalPayable.toLocaleString("en-IN")} with UPI (demo)`}
+            {isPaying ? "Processing..." : `Pay ₹${finalPayable.toLocaleString("en-IN")} with UPI`}
           </button>
         </div>
       </div>

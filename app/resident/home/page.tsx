@@ -1,17 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from '@/components/ui/Button'
 import { useResidentCart } from '../ResidentCartProvider'
 import {
   demoSociety,
   pilotMetrics,
+  residentCashbackMainLine,
   residentProfile as defaultResidentProfile,
+  residentWalletDemoBalance,
   sampleOrderId,
   weeklyCycle,
 } from '@/lib/demoData'
+import { useCashbackTierDemo } from "@/lib/cashbackTierDemoContext";
 
 export default function ResidentHomePage() {
   const { residentProfile, sessionOrderHydrated, hasSessionOrder } = useResidentCart()
+  const { tierPercent } = useCashbackTierDemo()
+  const cashbackMainLine = residentCashbackMainLine(tierPercent)
 
   const activeResidentProfile = {
     ...defaultResidentProfile,
@@ -28,15 +34,25 @@ export default function ResidentHomePage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-          Your household
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-          {activeResidentProfile.name}
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Flat {activeResidentProfile.flat} · {demoSociety.name}, {demoSociety.city}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+              Your household
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+              {activeResidentProfile.name}
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Flat {activeResidentProfile.flat} · {demoSociety.name}, {demoSociety.city}
+            </p>
+          </div>
+          <Link
+            href="/resident/wallet"
+            className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+          >
+            Wallet {residentWalletDemoBalance}
+          </Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
@@ -134,6 +150,28 @@ export default function ResidentHomePage() {
         </section>
       ) : null}
 
+      <section
+        className="rounded-xl border border-emerald-100 bg-emerald-50/90 py-2 shadow-sm"
+        aria-label={cashbackMainLine}
+      >
+        <p
+          className="hidden px-3 text-center text-xs font-medium leading-snug text-emerald-950 motion-reduce:block"
+          aria-hidden="true"
+        >
+          {cashbackMainLine}
+        </p>
+        <div className="motion-reduce:hidden overflow-hidden" aria-hidden="true">
+          <div className="resident-cashback-marquee-track">
+            <span className="inline-block shrink-0 whitespace-nowrap px-6 text-xs font-medium text-emerald-950">
+              {cashbackMainLine}
+            </span>
+            <span className="inline-block shrink-0 whitespace-nowrap px-6 text-xs font-medium text-emerald-950">
+              {cashbackMainLine}
+            </span>
+          </div>
+        </div>
+      </section>
+
       <section className="space-y-2">
         <Button href="/resident/catalog" className="w-full">
           Browse weekly catalog &amp; add items
@@ -146,7 +184,7 @@ export default function ResidentHomePage() {
       <section className="rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">After you shop</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Meal ideas line up with what you bought (demo).
+          Meal ideas line up with what you bought.
         </p>
         <div className="mt-4">
           <Button href="/resident/meal-builder" variant="outline" className="w-full">

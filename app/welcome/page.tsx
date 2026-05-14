@@ -27,7 +27,7 @@ export default function WelcomePage() {
 
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Society office &amp; vendor (demo)
+            Society office &amp; vendor
           </p>
           <p className="mt-1 text-xs text-slate-600">
             Separate sign-in—use only if you are running the pilot for your community or fulfilling

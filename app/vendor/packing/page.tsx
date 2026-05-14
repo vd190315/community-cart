@@ -222,7 +222,7 @@ export default function VendorPackingPage() {
           <p className="text-sm font-medium text-brand-800">Delivered to society gate</p>
           <p className="text-sm text-slate-600">
             Packing and dispatch are closed for {weeklyCycle.cycleLabel}. Use orders or welcome to
-            exit the demo.
+            exit.
           </p>
           <p className="text-xs text-slate-600">
             Order / cycle ID{" "}
@@ -288,6 +288,9 @@ export default function VendorPackingPage() {
         <p className="text-xs text-slate-500">
           Paid households only ({households.length} flats)—same lines as the consolidated SKU sheet.
           Label each bag with flat + resident name before dispatch.
+        </p>
+        <p className="text-xs text-slate-500">
+          This batch includes society-wide cashback based on final volume.
         </p>
         <p className="text-xs font-medium text-slate-700">
           Batch ops: <span className="text-brand-800">{operational.batchStatus}</span>

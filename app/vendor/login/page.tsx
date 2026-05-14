@@ -13,7 +13,7 @@ export default function VendorLoginPage() {
           and gate dispatch—same data the coordinator sent from admin.
         </p>
         <p className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950">
-          Pilot demo: login is not verified. Continue opens the paid-batch order—no live POS or
+          Login is not verified in this build. Continue opens the paid-batch order—no live POS or
           settlement.
         </p>
       </div>

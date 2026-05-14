@@ -13,8 +13,8 @@ export default function AdminLoginPage() {
           vendor handoff for {demoSociety.name}.
         </p>
         <p className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950">
-          Pilot demo: credentials are not verified. Continue skips sign-in and opens the operations
-          dashboard—use only for walkthroughs.
+          Credentials are not verified in this build. Continue skips sign-in and opens the operations
+          dashboard.
         </p>
       </div>
 

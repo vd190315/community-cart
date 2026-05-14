@@ -160,7 +160,7 @@ export default function OnboardingPage() {
           Save and go to home
         </Button>
         <p className="text-center text-xs text-slate-500">
-          Pilot demo: your name and flat are saved for checkout; family size and diet help you complete
+          Your name and flat are saved for checkout; family size and diet help you complete
           setup—full profiles come later.
         </p>
       </form>

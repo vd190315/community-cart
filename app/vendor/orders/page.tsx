@@ -10,12 +10,15 @@ import {
   paidHouseholdsGrossTotal,
   pilotMetrics,
   sampleOrderId,
+  vendorCashbackTierTargetsLine,
   weeklyCycle
 } from "@/lib/demoData";
 import { readHasAdminHandoffFromSession } from "@/lib/demoSessionGates";
 import { readOperationalState } from "@/lib/vendorPackingSession";
+import { useCashbackTierDemo } from "@/lib/cashbackTierDemoContext";
 
 export default function VendorOrdersPage() {
+  const { tierPercent } = useCashbackTierDemo();
   const [hydrated, setHydrated] = useState(false);
   const [vendorBatchAvailable, setVendorBatchAvailable] = useState(false);
   const [batchDispatched, setBatchDispatched] = useState(false);
@@ -57,6 +60,17 @@ export default function VendorOrdersPage() {
         </p>
       </div>
 
+      {hydrated && vendorBatchAvailable ? (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2.5 shadow-sm">
+          <p className="text-sm font-medium text-slate-900">
+            Society cashback tier this cycle: {tierPercent}%
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-600">
+            {vendorCashbackTierTargetsLine(tierPercent)}
+          </p>
+        </div>
+      ) : null}
+
       {!hydrated ? (
         <p className="text-sm text-slate-600">Loading…</p>
       ) : !vendorBatchAvailable ? (
@@ -78,7 +92,7 @@ export default function VendorOrdersPage() {
             <p className="text-sm font-medium text-brand-800">Delivered to society gate</p>
             <p className="text-sm text-slate-600">
               This batch is recorded at {demoSociety.name} for {weeklyCycle.cycleLabel}. No further
-              vendor actions for this demo cycle.
+              vendor actions for this cycle.
             </p>
             <p className="text-xs text-slate-600">
               Order / cycle ID{" "}
@@ -89,7 +103,7 @@ export default function VendorOrdersPage() {
             Return to welcome
           </Button>
           <p className="text-center text-[11px] text-slate-500">
-            Demo reset: clear this site&apos;s session storage or use a fresh tab to run the flow again.
+            To reset: clear this site&apos;s session storage or use a fresh tab to run the flow again.
           </p>
         </div>
       ) : batchDispatched ? (
@@ -113,7 +127,7 @@ export default function VendorOrdersPage() {
             Return to welcome
           </Button>
           <p className="text-center text-[11px] text-slate-500">
-            Demo reset: clear session storage or use a fresh tab to run the flow again.
+            To reset: clear session storage or use a fresh tab to run the flow again.
           </p>
         </div>
       ) : (

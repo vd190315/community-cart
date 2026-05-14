@@ -21,8 +21,7 @@ export function WaitlistForm() {
       >
         <p className="text-sm font-semibold text-slate-900">You&apos;re on the list</p>
         <p className="mt-2 text-sm text-slate-600">
-          This pilot uses a demo form only — no data is stored yet. We&apos;ll plug in your waitlist
-          backend next.
+          Responses are not stored yet. We&apos;ll connect your waitlist backend soon.
         </p>
       </div>
     );

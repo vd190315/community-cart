@@ -246,7 +246,7 @@ export default function ResidentOrderStatusPage() {
       </div>
 
       <p className="text-xs text-slate-500">
-        Pilot demo: for real orders, contact your society office or admin through your usual channel.
+        For live orders, contact your society office or admin through your usual channel.
       </p>
 
       <Button href="/resident/home" className="w-full">

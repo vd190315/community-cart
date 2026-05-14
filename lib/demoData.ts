@@ -175,6 +175,96 @@ export const pilotMetrics = {
   estimatedSavings: savingsAllHouseholds
 } as const;
 
+function formatDemoInr(n: number): string {
+  return n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
+/** Predefined admin cashback tiers (demo; amounts/orders per %; selection is in-memory only). */
+export const CASHBACK_DEMO_TIER_BY_PERCENT = {
+  2: {
+    tierPercent: 2 as const,
+    targetAmount: 50_000,
+    targetOrders: 40,
+    currentAmount: 38_400,
+    currentOrders: 31
+  },
+  3: {
+    tierPercent: 3 as const,
+    targetAmount: 75_000,
+    targetOrders: 60,
+    currentAmount: 38_400,
+    currentOrders: 31
+  },
+  5: {
+    tierPercent: 5 as const,
+    targetAmount: 100_000,
+    targetOrders: 80,
+    currentAmount: 38_400,
+    currentOrders: 31
+  }
+} as const;
+
+export type CashbackDemoTierPercent = keyof typeof CASHBACK_DEMO_TIER_BY_PERCENT;
+
+export const CASHBACK_DEMO_TIER_PERCENTS = [2, 3, 5] as const satisfies readonly CashbackDemoTierPercent[];
+
+export function getCashbackDemoTierConfig(tier: CashbackDemoTierPercent) {
+  return CASHBACK_DEMO_TIER_BY_PERCENT[tier];
+}
+
+/** Shared rupee / order figures for the resident home ticker only (simple story; tier % from UI state). */
+export const societyCashbackDemo = {
+  targetRupees: 25_000,
+  currentRupees: 18_400,
+  targetOrders: 40,
+  currentOrders: 31,
+  /** Orders-to-go phrase on the resident home ticker. */
+  residentOrdersToGoCopy: 3
+} as const;
+
+/** Resident home marquee line; `%` tier comes from demo UI state (default 3). */
+export function residentCashbackMainLine(tierPercent: number): string {
+  return `₹${formatDemoInr(societyCashbackDemo.currentRupees)} of ₹${formatDemoInr(societyCashbackDemo.targetRupees)} reached · ${societyCashbackDemo.residentOrdersToGoCopy} more orders unlock ${tierPercent}% cashback for everyone.`;
+}
+
+/** Admin dashboard target / current line for the selected tier. */
+export function adminCashbackTargetProgressLine(tier: CashbackDemoTierPercent): string {
+  const t = getCashbackDemoTierConfig(tier);
+  return `Target: ₹${formatDemoInr(t.targetAmount)} or ${t.targetOrders} orders · Current: ₹${formatDemoInr(t.currentAmount)} and ${t.currentOrders} orders`;
+}
+
+/** Admin dashboard subtext under the target/progress line. */
+export function adminCashbackIfWeHitSubtext(tierPercent: CashbackDemoTierPercent): string {
+  return `If we hit the target, all participating flats earn ${tierPercent}% cashback.`;
+}
+
+/** Admin consolidation info card body (amounts match selected tier targets). */
+export function adminCashbackConsolidationSummaryLine(tier: CashbackDemoTierPercent): string {
+  const t = getCashbackDemoTierConfig(tier);
+  return `We reached ₹${formatDemoInr(t.currentAmount)} of ₹${formatDemoInr(t.targetAmount)}. Society is close to unlocking ${t.tierPercent}% cashback.`;
+}
+
+/** Vendor orders: target/current line (same tier table as admin). */
+export function vendorCashbackTierTargetsLine(tier: CashbackDemoTierPercent): string {
+  const t = getCashbackDemoTierConfig(tier);
+  return `Target agreed with admin: ₹${formatDemoInr(t.targetAmount)} / ${t.targetOrders} orders · Current: ₹${formatDemoInr(t.currentAmount)} / ${t.currentOrders} orders`;
+}
+
+/** Admin dashboard strip + consolidation headings (tier-specific numbers via helpers above). */
+export const adminCashbackDemo = {
+  dashboardHeading: "This week's cashback target",
+  dashboardTierControlLabel: "This week's cashback tier",
+  consolidationHeading: "Cashback impact this cycle"
+} as const;
+
+/** Resident home cashback (optional sub copy; ticker uses `residentCashbackMainLine`). */
+export const residentCashbackDemo = {
+  subLine:
+    "When your society buys together, the vendor shares savings back as cashback."
+} as const;
+
+export const residentWalletDemoBalance = "₹0" as const;
+
 /** Shared order / cycle id format for resident confirmation, admin handoff, and vendor context. */
 export const orderIdPattern = "CC-GMR-2026";
 export const sampleOrderId = `${orderIdPattern}-1042`;

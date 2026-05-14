@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { demoSociety, sampleOrderId, weeklyCycle } from "@/lib/demoData";
+import {
+  adminCashbackDemo,
+  adminCashbackIfWeHitSubtext,
+  adminCashbackTargetProgressLine,
+  demoSociety,
+  sampleOrderId,
+  weeklyCycle
+} from "@/lib/demoData";
+import { CASHBACK_DEMO_TIERS, useCashbackTierDemo } from "@/lib/cashbackTierDemoContext";
 import { readHasAdminHandoffFromSession, readHasResidentOrderFromSession } from "@/lib/demoSessionGates";
 import { readOperationalState, type VendorOperationalState } from "@/lib/vendorPackingSession";
 import { AdminPurchasesAndHouseholds } from "./AdminPurchasesAndHouseholds";
@@ -77,6 +85,8 @@ function AdminDashboardContent() {
   const [hasResidentOrder, setHasResidentOrder] = useState(false);
   const [hasHandoff, setHasHandoff] = useState(false);
   const [handoffOps, setHandoffOps] = useState<VendorOperationalState | null>(null);
+  const [cashbackReminderSent, setCashbackReminderSent] = useState(false);
+  const { tierPercent, setTierPercent } = useCashbackTierDemo();
 
   useLayoutEffect(() => {
     setHasResidentOrder(readHasResidentOrderFromSession());
@@ -129,8 +139,8 @@ function AdminDashboardContent() {
     ? "Delivered to society gate"
     : "Batch sent to vendors";
   const postHandoffDetail = postHandoffDelivered
-    ? `Vendor confirmed the batch is at ${demoSociety.name} for ${weeklyCycle.cycleLabel}. Fulfillment for this demo cycle is complete—open status for the timeline.`
-    : `The consolidated sheet is with fulfillment for ${weeklyCycle.cycleLabel}. Track packing and gate dispatch from status—handoff for this demo cycle is complete on the coordinator side.`;
+    ? `Vendor confirmed the batch is at ${demoSociety.name} for ${weeklyCycle.cycleLabel}. Fulfillment for this cycle is complete—open status for the timeline.`
+    : `The consolidated sheet is with fulfillment for ${weeklyCycle.cycleLabel}. Track packing and gate dispatch from status—handoff for this cycle is complete on the coordinator side.`;
 
   return (
     <section className="space-y-5">
@@ -155,6 +165,43 @@ function AdminDashboardContent() {
           Delivery <span className="font-medium text-slate-700">{weeklyCycle.deliveryLabel}</span> ·{" "}
           {weeklyCycle.statusLabel}
         </p>
+      </div>
+
+      <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2.5 shadow-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-800">
+          {adminCashbackDemo.dashboardHeading}
+        </p>
+        <p className="mt-1.5 text-sm font-medium leading-snug text-slate-900">
+          {adminCashbackTargetProgressLine(tierPercent)}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          {adminCashbackIfWeHitSubtext(tierPercent)}
+        </p>
+        <div className="mt-3 border-t border-emerald-100/80 pt-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-800">
+            {adminCashbackDemo.dashboardTierControlLabel}
+          </p>
+          <div className="mt-2 flex gap-2">
+            {CASHBACK_DEMO_TIERS.map((tier) => {
+              const selected = tierPercent === tier;
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => setTierPercent(tier)}
+                  className={
+                    selected
+                      ? "min-h-[2.25rem] flex-1 rounded-full bg-brand-600 px-2 py-1.5 text-xs font-semibold text-white shadow-sm transition active:scale-[0.98]"
+                      : "min-h-[2.25rem] flex-1 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+                  }
+                  aria-pressed={selected}
+                >
+                  {tier}%
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {mainPanel === "loading" ? (
@@ -183,26 +230,45 @@ function AdminDashboardContent() {
         </div>
       )}
 
-      {mainPanel === "post_handoff" ? (
-        <div className="space-y-2">
-          <p className="text-center text-xs text-slate-500">
-            Consolidation was already sent for this cycle. Open below only if you need the sheet for
-            reference.
-          </p>
-          <Button href="/admin/consolidation" variant="outline" className="w-full py-3 text-base font-semibold">
-            View consolidation (reference)
-          </Button>
+      {mainPanel !== "loading" ? (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full py-2.5 text-sm font-semibold"
+              onClick={() => setCashbackReminderSent(true)}
+            >
+              Send cashback reminder to residents
+            </Button>
+            {cashbackReminderSent ? (
+              <p className="text-center text-xs font-medium text-emerald-800" role="status">
+                Cashback reminder sent.
+              </p>
+            ) : null}
+          </div>
+          {mainPanel === "post_handoff" ? (
+            <div className="space-y-2">
+              <p className="text-center text-xs text-slate-500">
+                Consolidation was already sent for this cycle. Open below only if you need the sheet for
+                reference.
+              </p>
+              <Button href="/admin/consolidation" variant="outline" className="w-full py-3 text-base font-semibold">
+                View consolidation (reference)
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button href="/admin/consolidation" className="w-full py-3 text-base font-semibold">
+                Review consolidation &amp; vendor sheet
+              </Button>
+              <p className="text-center text-xs text-slate-500">
+                Roll up paid quantities and send the batch to your vendor.
+              </p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="space-y-2">
-          <Button href="/admin/consolidation" className="w-full py-3 text-base font-semibold">
-            Review consolidation &amp; vendor sheet
-          </Button>
-          <p className="text-center text-xs text-slate-500">
-            Roll up paid quantities and send the batch to your vendor.
-          </p>
-        </div>
-      )}
+      ) : null}
 
       <Link href="/welcome" className="inline-block text-sm text-slate-600 hover:text-slate-800">
         ← Back to welcome

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import {
+  adminCashbackConsolidationSummaryLine,
+  adminCashbackDemo,
   adminHouseholdOrders,
   consolidatedItemsPaidOrders,
   demoSociety,
@@ -15,10 +17,12 @@ import {
   weeklyCycle,
   type ConsolidationVendorRoutingRow
 } from "@/lib/demoData";
+import { useCashbackTierDemo } from "@/lib/cashbackTierDemoContext";
 import { markAdminVendorHandoffInSession, readHasResidentOrderFromSession } from "@/lib/demoSessionGates";
 
 export default function AdminConsolidationPage() {
   const router = useRouter();
+  const { tierPercent } = useCashbackTierDemo();
   const [hydrated, setHydrated] = useState(false);
   const [hasResidentOrder, setHasResidentOrder] = useState(false);
 
@@ -105,10 +109,19 @@ export default function AdminConsolidationPage() {
             </div>
           </div>
 
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-800">
+              {adminCashbackDemo.consolidationHeading}
+            </p>
+            <p className="mt-1.5 text-sm font-medium leading-snug text-slate-900">
+              {adminCashbackConsolidationSummaryLine(tierPercent)}
+            </p>
+          </div>
+
           <div className="surface-card space-y-3">
             <p className="text-sm font-semibold text-slate-900">SKU totals (paid orders only)</p>
             <p className="text-xs text-slate-500">
-              Rolled up from the same per-flat lines as the packing demo—one row per catalogue SKU.
+              Rolled up from the same per-flat lines as the packing flow—one row per catalogue SKU.
             </p>
             <div className="space-y-2">
               {consolidatedItemsPaidOrders.map((item) => (
@@ -126,8 +139,8 @@ export default function AdminConsolidationPage() {
           <div className="surface-card space-y-3">
             <p className="text-sm font-semibold text-slate-900">Vendor routing for this batch</p>
             <p className="text-xs text-slate-500">
-              How paid society demand is allocated to fulfilment partners for this cycle (demo routing
-              matches tracking legs).
+              How paid society demand is allocated to fulfilment partners for this cycle. Routing
+              matches tracking legs.
             </p>
             {vendorRouting.isSplit ? (
               <div className="space-y-4">
@@ -184,7 +197,7 @@ export default function AdminConsolidationPage() {
             Send to vendor and view handoff
           </Button>
           <p className="text-center text-xs text-slate-500">
-            Records demo handoff and opens tracking so you can confirm the batch left operations.
+            Records the handoff and opens tracking so you can confirm the batch left operations.
           </p>
         </div>
       ) : null}

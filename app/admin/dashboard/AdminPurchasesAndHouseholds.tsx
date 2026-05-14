@@ -59,7 +59,7 @@ export function AdminPurchasesAndHouseholds() {
           <p className="text-xs text-slate-500">{weeklyCycle.cycleLabel}</p>
         </div>
         <p className="text-xs text-slate-500">
-          Same four flats used in resident and vendor demos—amounts are net of catalogue savings.
+          Same four flats appear in resident and vendor views—amounts are net of catalogue savings.
         </p>
         <div className="space-y-2">
           {adminHouseholdOrders.map((order) => (

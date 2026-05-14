@@ -285,7 +285,7 @@ export default function ResidentMealBuilderPage() {
               Cook with this week&apos;s cart
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              Demo suggestions based on a typical Green Meadows weekly basket and your
+              Suggestions are based on a typical Green Meadows weekly basket and your
               pantry profile.
             </p>
           </div>
@@ -342,7 +342,7 @@ export default function ResidentMealBuilderPage() {
           </p>
         ) : (
           <p className="mt-4 text-xs text-slate-500">
-            For this demo, we assume a basic home spice box and staples.
+            We assume a basic home spice box and staples.
           </p>
         )}
 
@@ -477,7 +477,7 @@ export default function ResidentMealBuilderPage() {
 
       {ingredientRequests.length > 0 ? (
         <section className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Incoming ingredient requests (demo)</h2>
+          <h2 className="text-base font-semibold text-slate-900">Incoming ingredient requests</h2>
           <p className="mt-1 text-xs text-slate-500">
             Recipient-side mock approval state for selected neighbors.
           </p>
@@ -583,7 +583,7 @@ export default function ResidentMealBuilderPage() {
                 ))
               ) : (
                 <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-                  No opted-in neighbors currently have this ingredient in their demo cart.
+                  No opted-in neighbors currently have this ingredient in their cart.
                 </p>
               )}
             </div>

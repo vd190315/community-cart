@@ -104,7 +104,7 @@ export default function AdminTrackingPage() {
           <p className="text-base font-semibold text-slate-900">No vendor handoff yet</p>
           <p className="text-sm text-slate-600">
             {hasResidentOrder
-              ? "Review consolidation and tap “Send to vendor and view handoff” to release this batch to fulfillment partners in the demo."
+              ? "Review consolidation and tap “Send to vendor and view handoff” to release this batch to fulfillment partners."
               : "Complete a resident checkout first, then prepare consolidation and send the batch to the vendor."}
           </p>
         </div>

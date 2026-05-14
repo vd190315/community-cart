@@ -29,7 +29,7 @@ export default function ResidentConfirmationPage() {
         <p className="text-3xl">✅</p>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Payment received</h1>
         <p className="text-sm text-slate-600">
-          Demo UPI succeeded. Your order is confirmed for this society cycle—we&apos;ll include your
+          Payment confirmed. Your order is confirmed for this society cycle—we&apos;ll include your
           flat in the bulk run.
         </p>
       </div>

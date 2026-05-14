@@ -10,6 +10,7 @@ import {
   vendorPackingHouseholdsPaid,
   weeklyCycle
 } from "@/lib/demoData";
+import { useCashbackTierDemo } from "@/lib/cashbackTierDemoContext";
 import {
   appendNotificationsForBatchChange,
   computeBatchStatus,
@@ -20,12 +21,15 @@ import {
 import { readHasAdminHandoffFromSession } from "@/lib/demoSessionGates";
 
 export default function VendorDispatchPage() {
+  const { tierPercent } = useCashbackTierDemo();
   const [hydrated, setHydrated] = useState(false);
   const [vendorBatchAvailable, setVendorBatchAvailable] = useState(false);
   const [isDispatched, setIsDispatched] = useState(false);
   const [dispatchedAt, setDispatchedAt] = useState<string | null>(null);
   const [deliveredAt, setDeliveredAt] = useState<string | null>(null);
   const [operational, setOperational] = useState<VendorOperationalState | null>(null);
+  const [cashbackConfirmChecked, setCashbackConfirmChecked] = useState(false);
+  const [showDispatchCashbackDemoNote, setShowDispatchCashbackDemoNote] = useState(false);
 
   const households = vendorPackingHouseholdsPaid;
   const flatIds = useMemo(() => households.map((h) => h.flat), [households]);
@@ -104,6 +108,7 @@ export default function VendorDispatchPage() {
         minute: "2-digit"
       })
     );
+    setShowDispatchCashbackDemoNote(true);
   }
 
   if (!hydrated || !vendorBatchAvailable) {
@@ -195,7 +200,7 @@ export default function VendorDispatchPage() {
           {deliveredAt ? (
             <p className="border-t border-emerald-100 pt-2 text-xs text-slate-500">
               Confirmed at <span className="font-medium text-slate-700">{deliveredAt}</span> (device
-              time, demo).
+              time).
             </p>
           ) : null}
         </div>
@@ -206,7 +211,7 @@ export default function VendorDispatchPage() {
           Return to welcome
         </Button>
         <p className="text-center text-[11px] text-slate-500">
-          Demo reset: clear session storage or use a fresh tab to run the flow again.
+          To reset: clear session storage or use a fresh tab to run the flow again.
         </p>
       </section>
     );
@@ -229,6 +234,14 @@ export default function VendorDispatchPage() {
             at the society gate.
           </p>
         </div>
+        {showDispatchCashbackDemoNote ? (
+          <p
+            className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-brand-900"
+            role="status"
+          >
+            Dispatch marked and {tierPercent}% cashback confirmed for this cycle.
+          </p>
+        ) : null}
         <div className="surface-card space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-600">Batch ID</span>
@@ -241,7 +254,7 @@ export default function VendorDispatchPage() {
           {dispatchedAt ? (
             <p className="border-t border-emerald-100 pt-2 text-xs text-slate-500">
               Dispatched at <span className="font-medium text-slate-700">{dispatchedAt}</span>{" "}
-              (device time, demo).
+              (device time).
             </p>
           ) : null}
         </div>
@@ -266,7 +279,7 @@ export default function VendorDispatchPage() {
           Return to welcome
         </Button>
         <p className="text-center text-[11px] text-slate-500">
-          Demo reset: clear session storage or use a fresh tab to run packing and dispatch again.
+          To reset: clear session storage or use a fresh tab to run packing and dispatch again.
         </p>
       </section>
     );
@@ -320,7 +333,7 @@ export default function VendorDispatchPage() {
         {totalBags > 0 && !allPacked ? (
           <p className="border-t border-amber-100 pt-2 text-[11px] leading-snug text-amber-900">
             Partial batch: {bagsCompleted} of {totalBags} flat bags marked packed. Reasons on file for
-            queued flats—coordinator and residents were notified in the demo feed.
+            queued flats—coordinator and residents were notified in the order feed.
           </p>
         ) : null}
       </div>
@@ -335,7 +348,7 @@ export default function VendorDispatchPage() {
           <li className="flex gap-2">
             <span className="text-brand-600">•</span>
             <span>
-              {totalBags} flat bags expected—{bagsCompleted} checked off in packing (demo); none
+              {totalBags} flat bags expected—{bagsCompleted} checked off in packing; none
               mixed
             </span>
           </li>
@@ -355,6 +368,16 @@ export default function VendorDispatchPage() {
           </li>
         </ul>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm">
+        <input
+          type="checkbox"
+          checked={cashbackConfirmChecked}
+          onChange={(e) => setCashbackConfirmChecked(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-emerald-300 text-brand-600 focus:ring-brand-300"
+        />
+        <span>Confirm {tierPercent}% cashback for all participating flats this cycle</span>
+      </label>
 
       <button
         type="button"
